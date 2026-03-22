@@ -1,0 +1,15 @@
+{
+  "version": "1",
+  "name": "MealArchitect API",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ],
+  "size": 0.0037088394165039062,
+  "filesCount": 15,
+  "presets": {
+    "requestType": "http",
+    "requestUrl": "http://localhost:8080"
+  }
+}

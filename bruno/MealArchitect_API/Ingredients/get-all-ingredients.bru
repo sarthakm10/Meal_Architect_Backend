@@ -1,0 +1,13 @@
+meta {
+  name: Get All Ingredients
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/ingredients
+}
+
+headers {
+  ~Authorization: Bearer {{token}}
+}

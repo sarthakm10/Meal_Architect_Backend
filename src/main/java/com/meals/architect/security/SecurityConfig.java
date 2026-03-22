@@ -38,6 +38,7 @@ public class SecurityConfig {
                 
                 // CLOSED DOORS: Everything else requires your custom JWT token
                 .anyRequest().authenticated()
+                //.anyRequest().permitAll()
             )
             
             // Insert your custom filter right before the standard Spring filter

@@ -1,0 +1,13 @@
+meta {
+  name: Get Shopping List
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/users/{{userId}}/shopping-list
+}
+
+headers {
+  ~Authorization: Bearer {{token}}
+}

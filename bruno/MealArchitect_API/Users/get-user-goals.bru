@@ -1,0 +1,13 @@
+meta {
+  name: Get User Goals
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/users/{{userId}}/goals
+}
+
+headers {
+  ~Authorization: Bearer {{token}}
+}

@@ -1,0 +1,22 @@
+meta {
+  name: Update User Goals
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/api/users/{{userId}}/goals
+}
+
+headers {
+  Content-Type: application/json
+  ~Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "dailyCalorieGoal": 2200,
+    "dailyProteinGoal": 160.0,
+    "weeklyBudgetGoal": 85.0
+  }
+}

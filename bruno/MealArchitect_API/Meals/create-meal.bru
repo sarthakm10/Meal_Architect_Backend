@@ -1,0 +1,31 @@
+meta {
+  name: Create Meal
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/meals
+}
+
+headers {
+  Content-Type: application/json
+  ~Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "userId": {{userId}},
+    "name": "Bruno Test Bowl",
+    "ingredients": [
+      {
+        "ingredientId": 1,
+        "quantity": 150
+      },
+      {
+        "ingredientId": 2,
+        "quantity": 100
+      }
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+meta {
+  name: Google Login Sync
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/auth/google
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "googleId": "google-oauth2-user-id-123",
+    "email": "sarth@gmail.com"
+  }
+}
+
+script:post-response {
+  if (res.status === 200 && res.body && res.body.token) {
+    bru.setVar("token", res.body.token);
+  }
+  if (res.status === 200 && res.body && res.body.userId) {
+    bru.setVar("userId", String(res.body.userId));
+  }
+}

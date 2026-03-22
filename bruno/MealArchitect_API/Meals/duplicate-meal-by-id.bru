@@ -1,0 +1,13 @@
+meta {
+  name: Duplicate Meal By Id
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/meals/{{mealId}}/duplicate
+}
+
+headers {
+  ~Authorization: Bearer {{token}}
+}

@@ -1,0 +1,17 @@
+meta {
+  name: Get Daily Progress
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/users/{{userId}}/progress
+}
+
+params:query {
+  date: {{progressDate}}
+}
+
+headers {
+  ~Authorization: Bearer {{token}}
+}
