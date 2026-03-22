@@ -23,6 +23,12 @@ public class User {
     @Column(nullable = false, unique = true)
     private String username;
 
+    @Column(nullable = false, unique = true)
+    private String email; 
+
+    @Column(name = "password")
+    private String password;
+
     @Column(name = "auth_provider")
     private String authProvider;
 
