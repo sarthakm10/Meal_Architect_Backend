@@ -1,0 +1,170 @@
+-- PostgreSQL realistic seed data (multiple users + meals + 7-day logs)
+BEGIN;
+
+-- 1) USERS
+INSERT INTO users (username, email, password, auth_provider, provider_id)
+VALUES
+  ('john_doe',     'john@example.com', '$2a$10$replace_with_bcrypt_hash_john', 'LOCAL',  NULL),
+  ('maya_fit',     'maya@example.com', '$2a$10$replace_with_bcrypt_hash_maya', 'LOCAL',  NULL),
+  ('sarth_google', 'sarth@gmail.com',  NULL,                                    'GOOGLE', 'google-oauth2-user-id-123')
+ON CONFLICT DO NOTHING;
+
+-- 2) USER PROFILES (shared PK with users via user_id)
+INSERT INTO user_profiles (user_id, daily_calorie_goal, daily_protein_goal, weekly_budget_goal)
+SELECT u.id, p.daily_calorie_goal, p.daily_protein_goal, p.weekly_budget_goal
+FROM users u
+JOIN (
+  VALUES
+    ('john_doe',     2300, 170.0, 95.0),
+    ('maya_fit',     1900, 130.0, 80.0),
+    ('sarth_google', 2100, 150.0, 90.0)
+) AS p(username, daily_calorie_goal, daily_protein_goal, weekly_budget_goal)
+  ON p.username = u.username
+ON CONFLICT (user_id) DO UPDATE
+SET daily_calorie_goal = EXCLUDED.daily_calorie_goal,
+    daily_protein_goal = EXCLUDED.daily_protein_goal,
+    weekly_budget_goal = EXCLUDED.weekly_budget_goal;
+
+-- 3) TAGS
+INSERT INTO tags (name)
+VALUES
+  ('High Protein'),
+  ('Low Carb'),
+  ('Budget'),
+  ('Vegan'),
+  ('Quick')
+ON CONFLICT (name) DO NOTHING;
+
+-- 4) INGREDIENTS
+INSERT INTO ingredients (name, category, calories, protein_grams, cost, icon_url)
+SELECT v.name, v.category, v.calories, v.protein_grams, v.cost, v.icon_url
+FROM (
+  VALUES
+    ('Chicken Breast', 'PROTEIN', 165, 31.0, 2.50, 'https://example.com/icons/chicken.png'),
+    ('Eggs',           'PROTEIN', 155, 13.0, 0.90, 'https://example.com/icons/eggs.png'),
+    ('Tofu',           'PROTEIN',  76,  8.0, 1.20, 'https://example.com/icons/tofu.png'),
+    ('Lentils',        'PROTEIN', 116,  9.0, 0.70, 'https://example.com/icons/lentils.png'),
+    ('Rice',           'CARB',    130,  2.7, 0.40, 'https://example.com/icons/rice.png'),
+    ('Oats',           'CARB',    389, 16.9, 0.60, 'https://example.com/icons/oats.png'),
+    ('Broccoli',       'VEGGIE',   55,  3.7, 0.80, 'https://example.com/icons/broccoli.png'),
+    ('Spinach',        'VEGGIE',   23,  2.9, 0.70, 'https://example.com/icons/spinach.png'),
+    ('Olive Oil',      'LIQUID',  884,  0.0, 0.30, 'https://example.com/icons/olive-oil.png'),
+    ('Milk',           'LIQUID',   42,  3.4, 0.25, 'https://example.com/icons/milk.png'),
+    ('Salt',           'SPICE',     0,  0.0, 0.05, 'https://example.com/icons/salt.png'),
+    ('Chili Flakes',   'SPICE',   282, 12.0, 0.10, 'https://example.com/icons/chili.png')
+) AS v(name, category, calories, protein_grams, cost, icon_url)
+WHERE NOT EXISTS (
+  SELECT 1 FROM ingredients i WHERE i.name = v.name
+);
+
+-- 5) INGREDIENT <-> TAG mapping
+INSERT INTO ingredient_tags (ingredient_id, tag_id)
+SELECT i.id, t.id
+FROM (
+  VALUES
+    ('Chicken Breast', 'High Protein'),
+    ('Chicken Breast', 'Budget'),
+    ('Eggs',           'High Protein'),
+    ('Eggs',           'Quick'),
+    ('Tofu',           'Vegan'),
+    ('Lentils',        'Vegan'),
+    ('Rice',           'Budget'),
+    ('Oats',           'Budget'),
+    ('Broccoli',       'Low Carb'),
+    ('Spinach',        'Low Carb')
+) AS x(ingredient_name, tag_name)
+JOIN ingredients i ON i.name = x.ingredient_name
+JOIN tags t ON t.name = x.tag_name
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM ingredient_tags it
+  WHERE it.ingredient_id = i.id
+    AND it.tag_id = t.id
+);
+
+-- 6) MEALS (2 per user)
+INSERT INTO meals (name, user_id)
+SELECT m.meal_name, u.id
+FROM (
+  VALUES
+    ('john_doe',     'Chicken Rice Bowl'),
+    ('john_doe',     'Egg Spinach Scramble'),
+    ('maya_fit',     'Tofu Veggie Stir Fry'),
+    ('maya_fit',     'Oats Protein Bowl'),
+    ('sarth_google', 'Lentil Rice Plate'),
+    ('sarth_google', 'Chicken Broccoli Prep')
+) AS m(username, meal_name)
+JOIN users u ON u.username = m.username
+WHERE NOT EXISTS (
+  SELECT 1 FROM meals me WHERE me.user_id = u.id AND me.name = m.meal_name
+);
+
+-- 7) MEAL INGREDIENTS
+INSERT INTO meal_ingredients (meal_id, ingredient_id, quantity)
+SELECT me.id, i.id, x.quantity
+FROM (
+  VALUES
+    ('john_doe',     'Chicken Rice Bowl',      'Chicken Breast', 200),
+    ('john_doe',     'Chicken Rice Bowl',      'Rice',           150),
+    ('john_doe',     'Chicken Rice Bowl',      'Broccoli',       100),
+
+    ('john_doe',     'Egg Spinach Scramble',   'Eggs',           120),
+    ('john_doe',     'Egg Spinach Scramble',   'Spinach',         80),
+    ('john_doe',     'Egg Spinach Scramble',   'Olive Oil',       10),
+
+    ('maya_fit',     'Tofu Veggie Stir Fry',   'Tofu',           180),
+    ('maya_fit',     'Tofu Veggie Stir Fry',   'Broccoli',       120),
+    ('maya_fit',     'Tofu Veggie Stir Fry',   'Chili Flakes',     3),
+
+    ('maya_fit',     'Oats Protein Bowl',      'Oats',            70),
+    ('maya_fit',     'Oats Protein Bowl',      'Milk',           200),
+    ('maya_fit',     'Oats Protein Bowl',      'Eggs',            60),
+
+    ('sarth_google', 'Lentil Rice Plate',      'Lentils',        180),
+    ('sarth_google', 'Lentil Rice Plate',      'Rice',           160),
+    ('sarth_google', 'Lentil Rice Plate',      'Salt',             2),
+
+    ('sarth_google', 'Chicken Broccoli Prep',  'Chicken Breast', 220),
+    ('sarth_google', 'Chicken Broccoli Prep',  'Broccoli',       150),
+    ('sarth_google', 'Chicken Broccoli Prep',  'Olive Oil',       10)
+) AS x(username, meal_name, ingredient_name, quantity)
+JOIN users u ON u.username = x.username
+JOIN meals me ON me.user_id = u.id AND me.name = x.meal_name
+JOIN ingredients i ON i.name = x.ingredient_name
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM meal_ingredients mi
+  WHERE mi.meal_id = me.id
+    AND mi.ingredient_id = i.id
+);
+
+-- 8) 7-DAY MEAL LOGS (from 2026-03-16 to 2026-03-22)
+WITH plan(username, meal_a, meal_b) AS (
+  VALUES
+    ('john_doe',     'Chicken Rice Bowl',     'Egg Spinach Scramble'),
+    ('maya_fit',     'Tofu Veggie Stir Fry',  'Oats Protein Bowl'),
+    ('sarth_google', 'Lentil Rice Plate',     'Chicken Broccoli Prep')
+),
+days AS (
+  SELECT (DATE '2026-03-22' - offs) AS consumed_date, offs
+  FROM generate_series(0, 6) AS offs
+)
+INSERT INTO meal_logs (user_id, meal_id, consumed_date)
+SELECT
+  u.id,
+  CASE WHEN d.offs % 2 = 0 THEN ma.id ELSE mb.id END AS meal_id,
+  d.consumed_date
+FROM plan p
+JOIN users u ON u.username = p.username
+JOIN meals ma ON ma.user_id = u.id AND ma.name = p.meal_a
+JOIN meals mb ON mb.user_id = u.id AND mb.name = p.meal_b
+CROSS JOIN days d
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM meal_logs ml
+  WHERE ml.user_id = u.id
+    AND ml.meal_id = CASE WHEN d.offs % 2 = 0 THEN ma.id ELSE mb.id END
+    AND ml.consumed_date = d.consumed_date
+);
+
+COMMIT;
