@@ -73,6 +73,11 @@ public class MealTrackerController {
         log.setMeal(meal);
         log.setConsumedDate(date);
 
+        String mealTypeStr = request.get("mealType");
+        if (mealTypeStr != null && !mealTypeStr.isBlank()) {
+            log.setMealType(MealLog.MealType.valueOf(mealTypeStr.toUpperCase()));
+        }
+
         MealLog savedLog = mealLogRepository.save(log);
         return ResponseEntity.ok(savedLog);
     }

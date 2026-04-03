@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import org.springframework.data.domain.PageRequest;
+
 @RestController
 @RequestMapping("/api")
 public class MealController {
@@ -75,6 +77,16 @@ public class MealController {
     public ResponseEntity<List<Meal>> getUserMeals(@PathVariable Long userId) {
         List<Meal> userMeals = mealRepository.findByUserId(userId);
         return ResponseEntity.ok(userMeals);
+    }
+
+    /**
+     * GET /api/meals/community/{userId}
+     * Fetches up to 6 recent meals created by OTHER users.
+     */
+    @GetMapping("/meals/community/{userId}")
+    public ResponseEntity<List<Meal>> getCommunityMeals(@PathVariable Long userId) {
+        List<Meal> communityMeals = mealRepository.findCommunityMeals(userId, PageRequest.of(0, 6));
+        return ResponseEntity.ok(communityMeals);
     }
 
     // ==========================================

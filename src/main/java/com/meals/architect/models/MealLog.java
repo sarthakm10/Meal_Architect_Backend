@@ -29,4 +29,12 @@ public class MealLog {
 
     @Column(name = "consumed_date", nullable = false)
     private LocalDate consumedDate;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "meal_type")
+    private MealType mealType;
+
+    public enum MealType {
+        BREAKFAST, LUNCH, SNACK, DINNER
+    }
 }
