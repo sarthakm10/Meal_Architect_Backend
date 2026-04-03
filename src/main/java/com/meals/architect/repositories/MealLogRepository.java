@@ -12,4 +12,4 @@ public interface MealLogRepository extends JpaRepository<MealLog, Long> {
     
     // Spring writes the SQL: SELECT * FROM meal_logs WHERE user_id = ? AND consumed_date = ?
     List<MealLog> findByUserIdAndConsumedDate(Long userId, LocalDate date);
-}
+}
